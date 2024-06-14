@@ -14,17 +14,10 @@ print_message() {
 }
 
 command_exists() {
-    command -v "$1" >/dev/null 2>&1
+    command -v "$1" &> /dev/null
 }
 
 checkEnv() {
-    ## Check for requirements.
-    REQUIREMENTS='curl groups sudo'
-    if ! command_exists "${REQUIREMENTS}"; then
-        print_message "${RED}" "To run me, you need: ${REQUIREMENTS}"
-        exit 1
-    fi
-
     ## Check Package Handeler
     PACKAGEMANAGER='apt yum dnf pacman zypper'
     for pgm in ${PACKAGEMANAGER}; do
@@ -49,14 +42,14 @@ checkEnv() {
     ## Check SuperUser Group
     SUPERUSERGROUP='wheel sudo root'
     for sug in ${SUPERUSERGROUP}; do
-        if groups | grep "${sug}"; then
+        if groups | grep "${sug}" &> /dev/null; then
             SUGROUP=${sug}
             print_message "${YELLOW}" "Super user group ${SUGROUP}"
         fi
     done
 
     ## Check if member of the sudo group.
-    if ! groups | grep "${SUGROUP}" >/dev/null; then
+    if ! groups | grep "${SUGROUP}" &> /dev/null; then
         print_message "${RED}" "You need to be a member of the sudo group to run me!"
         exit 1
     fi
@@ -70,9 +63,9 @@ installDepend() {
     if [[ $PACKAGER == "pacman" ]]; then
         if ! command_exists yay && ! command_exists paru; then
             print_message "${YELLOW}" "Installing yay as AUR helper..."
-            sudo "${PACKAGER}" --noconfirm -S base-devel
-            cd /opt && sudo git clone https://aur.archlinux.org/yay-git.git && sudo chown -R "${USER}:${USER}" ./yay-git
-            cd yay-git && makepkg --noconfirm -si
+            sudo "${PACKAGER}" --noconfirm -S base-devel &> /dev/null
+            cd /opt && sudo git clone https://aur.archlinux.org/yay-git.git &> /dev/null && sudo chown -R "${USER}:${USER}" ./yay-git
+            cd yay-git && makepkg --noconfirm -si &> /dev/null
         else
             print_message "${GREEN}" "Aur helper already installed"
         fi
@@ -84,9 +77,9 @@ installDepend() {
             print_message "${RED}" "No AUR helper found. Please install yay or paru."
             exit 1
         fi
-        "${AUR_HELPER}" --noconfirm -S "${DEPENDENCIES}"
+        "${AUR_HELPER}" --noconfirm -S "${DEPENDENCIES}" &> /dev/null
     else
-        sudo "${PACKAGER}" install -yq "${DEPENDENCIES}"
+        sudo "${PACKAGER}" install -yq "${DEPENDENCIES}" &> /dev/null
     fi
 }
 
@@ -104,23 +97,23 @@ installStarship() {
 install_additional_dependencies() {
     case $(command -v apt || command -v zypper || command -v dnf || command -v pacman) in
         *apt)
-            curl -LO https://github.com/neovim/neovim/releases/latest/download/nvim.appimage
+            curl -LO https://github.com/neovim/neovim/releases/latest/download/nvim.appimage &> /dev/null
             chmod u+x nvim.appimage
-            ./nvim.appimage --appimage-extract
+            ./nvim.appimage --appimage-extract &> /dev/null
             sudo mv squashfs-root /opt/neovim
-            sudo ln -s /opt/neovim/AppRun /usr/bin/nvim
+            sudo ln -s /opt/neovim/AppRun /usr/bin/nvim &> /dev/null
             ;;
         *zypper)
-            sudo zypper refresh
-            sudo zypper install -y neovim 
+            sudo zypper refresh &> /dev/null
+            sudo zypper install -y neovim &> /dev/null
             ;;
         *dnf)
-            sudo dnf check-update
-            sudo dnf install -y neovim 
+            sudo dnf check-update &> /dev/null
+            sudo dnf install -y neovim &> /dev/null
             ;;
         *pacman)
-            sudo pacman -Syu
-            sudo pacman -S --noconfirm neovim 
+            sudo pacman -Syu &> /dev/null
+            sudo pacman -S --noconfirm neovim &> /dev/null
             ;;
         *)
             print_message "${RED}" "No supported package manager found. Please install neovim manually."
@@ -144,8 +137,8 @@ linkConfig() {
 
     print_message "${YELLOW}" "Linking new bash config file..."
     ## Make symbolic link.
-    ln -svf "${GITPATH}/.bashrc" "${USER_HOME}/.bashrc"
-    ln -svf "${GITPATH}/starship.toml" "${USER_HOME}/.config/starship.toml"
+    ln -svf "${GITPATH}/.bashrc" "${USER_HOME}/.bashrc" &> /dev/null
+    ln -svf "${GITPATH}/starship.toml" "${USER_HOME}/.config/starship.toml" &> /dev/null
 }
 
 checkEnv
@@ -154,7 +147,7 @@ installStarship
 install_additional_dependencies
 
 if linkConfig; then
-    print_message "${GREEN}" "Done!\nrestart your shell to see the changes."
+    print_message "${GREEN}" "Done!\nRestart your shell to see the changes."
 else
     print_message "${RED}" "Something went wrong!"
 fi
