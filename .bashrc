@@ -80,7 +80,7 @@ export LESS_TERMCAP_us=$'\E[01;32m'
 #######################################################
 
 # Alias's for SSH (Example)
-# alias remote='kitten ssh -i ~/.ssh/key.pem user@IP'
+# alias remote='ssh -i ~/.ssh/key.pem user@IP'
 
 #######################################################
 # GENERAL ALIAS'S
@@ -162,3 +162,14 @@ eval "$(starship init bash)"
 
 # Zoxide
 eval "$(zoxide init bash)"
+
+# Dynamic window title
+set-window-title() {
+  echo -en "\033]0;$(pwd | sed -e "s;^$HOME;~;")\a"
+}
+
+if [[ "$PROMPT_COMMAND" ]]; then
+  export PROMPT_COMMAND="$PROMPT_COMMAND;set-window-title"
+else
+  export PROMPT_COMMAND=set-window-title
+fi
