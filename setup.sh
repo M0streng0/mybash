@@ -122,6 +122,24 @@ install_additional_dependencies() {
     esac
 }
 
+create_fastfetch_config() {
+    ## Get the correct user home directory.
+    USER_HOME=$(getent passwd "${SUDO_USER:-$USER}" | cut -d: -f6)
+    
+    if [ ! -d "${USER_HOME}/.config/fastfetch" ]; then
+        mkdir -p "${USER_HOME}/.config/fastfetch"
+    fi
+    # Check if the fastfetch config file exists
+    if [ -e "${USER_HOME}/.config/fastfetch/config.jsonc" ]; then
+        rm -f "${USER_HOME}/.config/fastfetch/config.jsonc"
+    fi
+    ln -svf "${GITPATH}/config.jsonc" "${USER_HOME}/.config/fastfetch/config.jsonc" || {
+        print_message "${RED}" "Failed to create symbolic link for fastfetch config"
+        exit 1
+    }
+}
+
+
 linkConfig() {
     ## Get the correct user home directory.
     USER_HOME=$(getent passwd "${SUDO_USER:-$USER}" | cut -d: -f6)
@@ -136,15 +154,21 @@ linkConfig() {
     fi
 
     print_message "${YELLOW}" "Linking new bash config file..."
-    ## Make symbolic link.
-    ln -svf "${GITPATH}/.bashrc" "${USER_HOME}/.bashrc" &> /dev/null
-    ln -svf "${GITPATH}/starship.toml" "${USER_HOME}/.config/starship.toml" &> /dev/null
+    ln -svf "${GITPATH}/.bashrc" "${USER_HOME}/.bashrc" || {
+        print_message "${RED}" "Failed to create symbolic link for .bashrc"
+        exit 1
+    }
+    ln -svf "$GITPATH/starship.toml" "$USER_HOME/.config/starship.toml" || {
+        print_message "${RED}" "Failed to create symbolic link for starship.toml"
+        exit 1
+    }
 }
 
 checkEnv
 installDepend
 installStarship
 install_additional_dependencies
+create_fastfetch_config
 
 if linkConfig; then
     print_message "${GREEN}" "Done!\nRestart your shell to see the changes."
