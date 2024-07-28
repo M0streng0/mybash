@@ -8,7 +8,7 @@
         }
     },
     "display": {
-        "separator": "   ",
+        "separator": "    ",
         "color": "cyan"
     },
     "modules": [
@@ -18,24 +18,24 @@
         },
         {
             "type": "host",
-            "key": "  󰌢 "
+            "key": "  󰌢"
         },
         {
             "type": "cpu",
-            "key": "   "
+            "key": "  "
         },
         {
             "type": "gpu",
             "detectionMethod": "pci",
-            "key": "   "
+            "key": "  "
         },
         {
             "type": "display",
-            "key": "  󱄄 "
+            "key": "  󱄄"
         },
         {
             "type": "memory",
-            "key": "   "
+            "key": "  "
         },
         {
             "type": "custom", // SoftwareStart
@@ -43,20 +43,20 @@
         },
         {
             "type": "os",
-            "key": "   " // Just get your distro's logo off nerdfonts.com,
+            "key": "  " // Just get your distro's logo off nerdfonts.com,
         },
         {
             "type": "kernel",
-            "key": "   ",
+            "key": "  ",
             "format": "{1} {2}"
         },
         {
             "type": "wm",
-            "key": "   "
+            "key": "  "
         },
         {
             "type": "shell",
-            "key": "   "
+            "key": "  "
         },
         {
             "type": "custom",
