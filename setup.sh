@@ -13,17 +13,28 @@ print_message() {
     echo -e "${1}${2}${NC}"
 }
 
+# Function to check if command exists
 command_exists() {
     command -v "$1" &> /dev/null
 }
 
 checkEnv() {
-    ## Check Package Handeler
-    PACKAGEMANAGER='apt yum dnf pacman zypper'
+    # Check for requirements.
+    REQUIREMENTS='curl groups sudo'
+    for req in ${REQUIREMENTS}; do
+        if ! command_exists "${req}"; then
+            print_message "${RED}" "To run me, you need: ${req}"
+            exit 1
+        fi
+    done
+
+    # Check Package Handeler
+    PACKAGEMANAGER='nala apt dnf yum pacman zypper emerge xbps-install nix-env'
     for pgm in ${PACKAGEMANAGER}; do
         if command_exists "${pgm}"; then
             PACKAGER=${pgm}
             print_message "${YELLOW}" "Using ${pgm}"
+            break
         fi
     done
 
@@ -32,24 +43,33 @@ checkEnv() {
         exit 1
     fi
 
-    ## Check if the current directory is writable.
+    if command_exists sudo; then
+        SUDO_CMD="sudo"
+    elif command_exists doas && [ -f "/etc/doas.conf" ]; then
+        SUDO_CMD="doas"
+    else
+        SUDO_CMD="su -c"
+    fi
+
+    # Check if the current directory is writable.
     GITPATH="$(dirname "$(realpath "$0")")"
     if [[ ! -w ${GITPATH} ]]; then
         print_message "${RED}" "Can't write to ${GITPATH}"
         exit 1
     fi
 
-    ## Check SuperUser Group
+    # Check SuperUser Group
     SUPERUSERGROUP='wheel sudo root'
     for sug in ${SUPERUSERGROUP}; do
-        if groups | grep "${sug}" &> /dev/null; then
+        if groups | grep -q "${sug}"; then
             SUGROUP=${sug}
             print_message "${YELLOW}" "Super user group ${SUGROUP}"
+            break
         fi
     done
 
-    ## Check if member of the sudo group.
-    if ! groups | grep "${SUGROUP}" &> /dev/null; then
+    # Check if member of the sudo group.
+    if ! groups | grep -q "${SUGROUP}"; then
         print_message "${RED}" "You need to be a member of the sudo group to run me!"
         exit 1
     fi
@@ -57,118 +77,92 @@ checkEnv() {
 }
 
 installDepend() {
-    ## Check for dependencies.
-    DEPENDENCIES='bash bash-completion tar tree fastfetch tldr trash-cli'
-    print_message "${YELLOW}" "Installing dependencies..."
-    if [[ $PACKAGER == "pacman" ]]; then
-        if ! command_exists yay && ! command_exists paru; then
-            print_message "${YELLOW}" "Installing yay as AUR helper..."
-            sudo "${PACKAGER}" --noconfirm -S base-devel &> /dev/null
-            cd /opt && sudo git clone https://aur.archlinux.org/yay-git.git &> /dev/null && sudo chown -R "${USER}:${USER}" ./yay-git
-            cd yay-git && makepkg --noconfirm -si &> /dev/null
-        else
-            print_message "${GREEN}" "Aur helper already installed"
-        fi
-        if command_exists yay; then
-            AUR_HELPER="yay"
-        elif command_exists paru; then
-            AUR_HELPER="paru"
-        else
-            print_message "${RED}" "No AUR helper found. Please install yay or paru."
-            exit 1
-        fi
-        "${AUR_HELPER}" --noconfirm -S "${DEPENDENCIES}" &> /dev/null
-    else
-        sudo "${PACKAGER}" install -yq "${DEPENDENCIES}" &> /dev/null
+    # Check for dependencies.
+    DEPENDENCIES='bash bash-completion tar tree fastfetch tldr trash-cli fzf zoxide'
+
+    # Check nvim existance
+    if ! command_exists nvim; then
+        DEPENDENCIES="${DEPENDENCIES} neovim"
     fi
+
+    print_message "${YELLOW}" "Installing dependencies..."
+    case "$PACKAGER" in
+        "pacman")
+            if ! command_exists yay && ! command_exists paru; then
+                print_message "${YELLOW}" "Installing yay as AUR helper..."
+                $SUDO_CMD "$PACKAGER" --noconfirm -S base-devel &> /dev/null
+                $SUDO_CMD git clone https://aur.archlinux.org/yay-git.git /opt/yay-git &> /dev/null
+                $SUDO_CMD chown -R "${USER}:${USER}" /opt/yay-git
+                cd /opt/yay-git && makepkg --noconfirm -si &> /dev/null
+            else
+                print_message "${GREEN}" "AUR helper already installed"
+            fi
+            AUR_HELPER=$(command_exists yay && echo "yay" || echo "paru")
+            "$AUR_HELPER" --noconfirm -S "$DEPENDENCIES" &> /dev/null
+            ;;
+        "nala"|"dnf"|"apt")
+            "$SUDO_CMD" "$PACKAGER" install -y "$DEPENDENCIES" &> /dev/null
+            ;;
+        "emerge")
+            "$SUDO_CMD" "$PACKAGER" -v app-shells/bash app-shells/bash-completion app-arch/tar app-text/tree app-misc/fastfetch app-text/tldr app-misc/trash-cli app-shells/fzf app-shells/zoxide app-editors/neovim &> /dev/null 
+            ;;
+        "xbps-install")
+            "$SUDO_CMD" "$PACKAGER" -v "$DEPENDENCIES" &> /dev/null
+            ;;
+        "nix-env")
+            "$SUDO_CMD" "$PACKAGER" -iA nixos.bash nixos.bash-completion nixos.tree nixos.fastfetch nixos.tldr nixos.trash-cli nixos.fzf nixos.zoxide nixos.neovim nixos.pkgs.starship &> /dev/null
+            ;;
+        *)
+            "$SUDO_CMD" "$PACKAGER" install -yq "$DEPENDENCIES" &> /dev/null
+            ;;
+    esac
 }
 
 installStarship() {
     if command_exists starship; then
         print_message "${GREEN}" "Starship already installed"
-        return
-    fi
-    if ! curl -sS https://starship.rs/install.sh | sh; then
-        print_message "${RED}" "Something went wrong during starship install!"
-        exit 1
-    fi
-}
-
-install_additional_dependencies() {
-    case $(command -v apt || command -v zypper || command -v dnf || command -v pacman) in
-        *apt)
-            curl -LO https://github.com/neovim/neovim/releases/latest/download/nvim.appimage &> /dev/null
-            chmod u+x nvim.appimage
-            ./nvim.appimage --appimage-extract &> /dev/null
-            sudo mv squashfs-root /opt/neovim
-            sudo ln -s /opt/neovim/AppRun /usr/bin/nvim &> /dev/null
-            ;;
-        *zypper)
-            sudo zypper refresh &> /dev/null
-            sudo zypper install -y neovim &> /dev/null
-            ;;
-        *dnf)
-            sudo dnf check-update &> /dev/null
-            sudo dnf install -y neovim &> /dev/null
-            ;;
-        *pacman)
-            sudo pacman -Syu &> /dev/null
-            sudo pacman -S --noconfirm neovim &> /dev/null
-            ;;
-        *)
-            print_message "${RED}" "No supported package manager found. Please install neovim manually."
+    else
+        curl -sS https://starship.rs/install.sh | sh || {
+            print_message "${RED}" "Something went wrong during starship install!"
             exit 1
-            ;;
-    esac
+        }
+    fi
 }
 
-create_fastfetch_config() {
-    ## Get the correct user home directory.
-    USER_HOME=$(getent passwd "${SUDO_USER:-$USER}" | cut -d: -f6)
-    
-    if [ ! -d "${USER_HOME}/.config/fastfetch" ]; then
-        mkdir -p "${USER_HOME}/.config/fastfetch"
+config_link() {
+    local source_file=$1
+    local target_file=$2
+
+    # Move existing config file if it exists.
+    if [ -e "$target_file" ]; then
+        print_message "${YELLOW}" "Moving old $(basename "$target_file") to ${target_file}.bak"
+        mv "$target_file" "${target_file}.bak" || {
+            print_message "${RED}" "Can't move the old config file!"
+            exit 1
+        }
     fi
-    # Check if the fastfetch config file exists
-    if [ -e "${USER_HOME}/.config/fastfetch/config.jsonc" ]; then
-        rm -f "${USER_HOME}/.config/fastfetch/config.jsonc"
-    fi
-    ln -svf "${GITPATH}/config.jsonc" "${USER_HOME}/.config/fastfetch/config.jsonc" || {
-        print_message "${RED}" "Failed to create symbolic link for fastfetch config"
+
+    # Create target directory if it doesn't exist.
+    mkdir -p "$(dirname "$target_file")"
+
+    # Link the new config file.
+    ln -svf "$source_file" "$target_file" || {
+        print_message "${RED}" "Failed to create symbolic link for $(basename "$source_file")"
         exit 1
     }
 }
-
 
 linkConfig() {
-    ## Get the correct user home directory.
     USER_HOME=$(getent passwd "${SUDO_USER:-$USER}" | cut -d: -f6)
-    ## Check if a bashrc file is already there.
-    OLD_BASHRC="${USER_HOME}/.bashrc"
-    if [[ -e ${OLD_BASHRC} ]]; then
-        print_message "${YELLOW}" "Moving old bash config file to ${USER_HOME}/.bashrc.bak"
-        if ! mv "${OLD_BASHRC}" "${USER_HOME}/.bashrc.bak"; then
-            print_message "${RED}" "Can't move the old bash config file!"
-            exit 1
-        fi
-    fi
-
-    print_message "${YELLOW}" "Linking new bash config file..."
-    ln -svf "${GITPATH}/.bashrc" "${USER_HOME}/.bashrc" || {
-        print_message "${RED}" "Failed to create symbolic link for .bashrc"
-        exit 1
-    }
-    ln -svf "$GITPATH/starship.toml" "$USER_HOME/.config/starship.toml" || {
-        print_message "${RED}" "Failed to create symbolic link for starship.toml"
-        exit 1
-    }
+    
+    config_link "${GITPATH}/config.jsonc" "${USER_HOME}/.config/fastfetch/config.jsonc"   # Fastfetch
+    config_link "${GITPATH}/.bashrc" "${USER_HOME}/.bashrc"                               # Bash
+    config_link "${GITPATH}/starship.toml" "${USER_HOME}/.config/starship.toml"           # Starship
 }
 
 checkEnv
 installDepend
 installStarship
-install_additional_dependencies
-create_fastfetch_config
 
 if linkConfig; then
     print_message "${GREEN}" "Done!\nRestart your shell to see the changes."
