@@ -4,6 +4,11 @@ echo -e "
 \033[31m█▀▄▀█ █▀█ █▀ ▀█▀ █▀█ █▀▀ █▄░█ █▀▀ █▀█
 \033[31m█░▀░█ █▄█ ▄█ ░█░ █▀▄ ██▄ █░▀█ █▄█ █▄█"
 
+PROMPT_DIRTRIM=3
+VIRTUAL_ENV_DISABLE_PROMPT=1
+
+PS1='\n\[\e[96m\]┌──\[\e[96m\]${VIRTUAL_ENV:+(\[\e[0m\]${VIRTUAL_ENV##*/}\[\e[96m\])}\[\e[96m\](\[\e[93;1m\]\u\[\e[96m\]@\[\e[32m\]\H\[\e[0;96m\])-[\[\e[0m\]\w\[\e[96m\]]\n└─\[\e[94;1m\]\$\[\e[0m\] '
+
 x=${-%%i*}
 iatest=$((${#x} + 1))
 
@@ -193,9 +198,6 @@ mp4togif() {
 
     	ffmpeg -i "$input_file" -vf "fps=$fps,scale=1920:-1:flags=lanczos" -c:v gif "$output_file"
 }
-
-# Install Starship - curl -sS https://starship.rs/install.sh | sh
-eval "$(starship init bash)"
 
 # Zoxide
 eval "$(zoxide init bash)"
