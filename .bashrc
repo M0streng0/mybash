@@ -168,37 +168,6 @@ whatsmyip () {
     curl -s ifconfig.me
 }
 
-# For changing wallpaper
-wallpaper() {
-	if [ $# -ne 1 ]; then
-		echo "Usage: wallpaper image.jpg"
-		return 1
-    	fi
-    	swww img "$1" --transition-fps 60 --transition-type wipe --transition-duration 2
-	image_path=$(readlink -f "$1")
-	ln -sf "$image_path" ~/.config/wallpaper
-}
-
-# For converting mp4 to gif
-mp4togif() {
-	if [ $# -eq 1 ]; then
-		if [ "$1" = "-h" ] || [ "$1" = "--help" ]; then
-			echo "Usage: mp4togif input.mp4 [fps]"
-        		return 1
-        	fi
-    	fi
-    	if [ $# -lt 1 ]; then
-        	echo "Usage: mp4togif input.mp4 [fps]"
-        	return 1
-    	fi
-	
-	input_file="$1"
-   	fps=${2:-10} # Default FPS
-    	output_file="$(dirname "$input_file")/$(basename "$input_file" .mp4).gif"
-
-    	ffmpeg -i "$input_file" -vf "fps=$fps,scale=1920:-1:flags=lanczos" -c:v gif "$output_file"
-}
-
 # Zoxide
 eval "$(zoxide init bash)"
 

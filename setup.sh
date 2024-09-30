@@ -110,23 +110,12 @@ installDepend() {
             "$SUDO_CMD" "$PACKAGER" -v "$DEPENDENCIES" &> /dev/null
             ;;
         "nix-env")
-            "$SUDO_CMD" "$PACKAGER" -iA nixos.bash nixos.bash-completion nixos.tree nixos.fastfetch nixos.tldr nixos.trash-cli nixos.fzf nixos.zoxide nixos.neovim nixos.pkgs.starship &> /dev/null
+            "$SUDO_CMD" "$PACKAGER" -iA nixos.bash nixos.bash-completion nixos.tree nixos.fastfetch nixos.tldr nixos.trash-cli nixos.fzf nixos.zoxide nixos.neovim &> /dev/null
             ;;
         *)
             "$SUDO_CMD" "$PACKAGER" install -yq "$DEPENDENCIES" &> /dev/null
             ;;
     esac
-}
-
-installStarship() {
-    if command_exists starship; then
-        print_message "${GREEN}" "Starship already installed"
-    else
-        curl -sS https://starship.rs/install.sh | sh || {
-            print_message "${RED}" "Something went wrong during starship install!"
-            exit 1
-        }
-    fi
 }
 
 config_link() {
@@ -157,12 +146,10 @@ linkConfig() {
     
     config_link "${GITPATH}/config.jsonc" "${USER_HOME}/.config/fastfetch/config.jsonc"   # Fastfetch
     config_link "${GITPATH}/.bashrc" "${USER_HOME}/.bashrc"                               # Bash
-    config_link "${GITPATH}/starship.toml" "${USER_HOME}/.config/starship.toml"           # Starship
 }
 
 checkEnv
 installDepend
-installStarship
 
 if linkConfig; then
     print_message "${GREEN}" "Done!\nRestart your shell to see the changes."
