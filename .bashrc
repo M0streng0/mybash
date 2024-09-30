@@ -121,6 +121,10 @@ alias f="find . | grep "
 alias tree='tree -CAhF --dirsfirst'
 alias treed='tree -CAFd'
 
+# Alias's for copy and pasting from and to clipboard
+alias copy='xclip -selection clipboard'
+alias paste='xclip -selection clipboard -o'
+
 # Show all logs in /var/log
 alias logs="sudo find /var/log -type f -exec file {} \; | grep 'text' | cut -d' ' -f1 | sed -e's/:$//g' | grep -v '[0-9]$' | xargs tail -f"
 
