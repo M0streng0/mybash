@@ -23,8 +23,6 @@ alias ll='ls -Fls' # long listing format
 ```
 - **Functions:**
 	- _extract:_ Extract various types of archives.
-	- _wallpaper_: Change the desktop wallpaper using `swww`.
-	- _mp4togif_: Convert MP4 videos to GIFs.
 
 ## Prompt Customization and History Management
 - **Prompt Command:** Automatically saves the command history after each command.
@@ -38,8 +36,7 @@ alias ll='ls -Fls' # long listing format
 - **Color and Formatting:** Enhancements for better readability of command outputs using colors and formatting.
 
 ## Installation and Configuration Helpers
-- **Starship Prompt:** Initializes the Starship prompt if installed.
-- **Autojump:** Enables Autojump if available.
+- **Zoxide:** Enables Zoxide if available.
 
 ## Conclusion
 This `.bashrc` file offers a robust setup that enhances the shell experience with useful aliases and functions. It also includes system-specific configurations and safety features to cater to various user needs and system environments, making the terminal more user-friendly, efficient, and powerful for everyday use.
