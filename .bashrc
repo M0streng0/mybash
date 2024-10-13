@@ -128,6 +128,9 @@ alias paste='xclip -selection clipboard -o'
 # Show all logs in /var/log
 alias logs="sudo find /var/log -type f -exec file {} \; | grep 'text' | cut -d' ' -f1 | sed -e's/:$//g' | grep -v '[0-9]$' | xargs tail -f"
 
+# Alias for better cat command
+alias cat='bat'
+
 # Extracts any archive(s) (if unp isn't installed)
 extract () {
 	for archive in "$@"; do
