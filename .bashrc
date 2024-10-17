@@ -7,7 +7,7 @@ echo -e "
 PROMPT_DIRTRIM=3
 VIRTUAL_ENV_DISABLE_PROMPT=1
 
-PS1='\n\[\e[96m\]┌──\[\e[96m\]${VIRTUAL_ENV:+(\[\e[0m\]${VIRTUAL_ENV##*/}\[\e[96m\])}\[\e[96m\](\[\e[93;1m\]\u\[\e[96m\]@\[\e[32m\]\H\[\e[0;96m\])-[\[\e[0m\]\w\[\e[96m\]]\n└─\[\e[94;1m\]\$\[\e[0m\] '
+PS1='\n\[\e[96m\]┌──\[\e[96m\]${VIRTUAL_ENV:+(\[\e[0m\]${VIRTUAL_ENV##*/}\[\e[96m\])}\[\e[96m\](\[\e[93;1m\]\u\[\e[96m\]@\[\e[32m\]\H\[\e[0;96m\])─[\[\e[0m\]\w\[\e[96m\]]\n\[\e[96m\]└─\[\e[94;1m\]\$\[\e[0m\] '
 
 x=${-%%i*}
 iatest=$((${#x} + 1))
