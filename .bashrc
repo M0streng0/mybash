@@ -128,9 +128,6 @@ alias paste='xclip -selection clipboard -o'
 # Show all logs in /var/log
 alias logs="sudo find /var/log -type f -exec file {} \; | grep 'text' | cut -d' ' -f1 | sed -e's/:$//g' | grep -v '[0-9]$' | xargs tail -f"
 
-# Alias for better cat command
-alias cat='bat'
-
 # Alias's for git
 alias ga='git add'
 alias gs='git status -sb'
@@ -144,14 +141,21 @@ alias gcm='git commit -m'
 alias gcb='git checkout -b'
 
 # Alias's for docker
-alias di='docker inspect $1'
-alias dl='docker logs -f $1'
-alias ds='docker stop $1'
-alias dr='docker restart $1'
+di-fn() { docker inspect "$1"; }
+dl-fn() { docker logs -f "$1"; }
+ds-fn() { docker stop "$1"; }
+dr-fn() { docker restart "$1"; }
+dex-fn() { docker exec -it "$1" "${2:-bash}"; }
+
+alias di='di-fn'
+alias dl='dl-fn'
+alias ds='ds-fn'
+alias dr='dr-fn'
 alias dcu='docker compose up -d'
 alias dcd='docker compose down'
 alias dcs='docker compose stop'
-alias dex='docker exec -it $1 ${2:-bash}'
+alias dcp='docker compose pull'
+alias dex='dex-fn'
 alias dim='docker images'
 alias dps='docker ps'
 alias drm='docker container prune -f'
