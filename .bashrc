@@ -131,6 +131,37 @@ alias logs="sudo find /var/log -type f -exec file {} \; | grep 'text' | cut -d' 
 # Alias for better cat command
 alias cat='bat'
 
+# Alias's for git
+alias ga='git add'
+alias gs='git status -sb'
+alias gd='git diff'
+alias gb='git branch'
+alias gl='git log --oneline'
+alias gco='git checkout'
+alias gpl='git pull'
+alias gps='git push'
+alias gcm='git commit -m'
+alias gcb='git checkout -b'
+
+# Alias's for docker
+alias di='docker inspect $1'
+alias dl='docker logs -f $1'
+alias ds='docker stop $1'
+alias dr='docker restart $1'
+alias dcu='docker compose up -d'
+alias dcd='docker compose down'
+alias dcs='docker compose stop'
+alias dex='docker exec -it $1 ${2:-bash}'
+alias dim='docker images'
+alias dps='docker ps'
+alias drm='docker container prune -f'
+alias dri='docker image prune -a -f'
+alias drv='docker volume prune -f'
+alias dstats='docker stats --all'
+alias ds_all='docker stop $(docker ps -q)'
+alias dprune='docker system prune -a -f'
+alias drm_all='docker rm $(docker ps -a -q)'
+
 # Extracts any archive(s) (if unp isn't installed)
 extract () {
 	for archive in "$@"; do
